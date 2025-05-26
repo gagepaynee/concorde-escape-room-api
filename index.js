@@ -25,7 +25,19 @@ const wss = new WebSocketServer({ server });
 function registerSocket(socket, id, event) {
   console.log(`${event}: `, id);
   socket.uid = id;
-  socket.send(JSON.stringify({ event: `${event}_success` }));
+  socket.role = event;
+  const message = JSON.stringify({ event: `${event}_success`, id });
+
+  // Notify all setup sockets when a client registers successfully
+  if (event === 'register') {
+    wss.clients.forEach((client) => {
+      if (client.role === 'setup') {
+        client.send(message);
+      }
+    });
+  }
+
+  socket.send(message);
 }
 
 wss.on('connection', (socket) => {
