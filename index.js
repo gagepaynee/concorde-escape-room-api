@@ -22,6 +22,12 @@ server.listen(process.env.PORT, '0.0.0.0', () => {
 
 const wss = new WebSocketServer({ server });
 
+function registerSocket(socket, id, event) {
+  console.log(`${event}: `, id);
+  socket.uid = id;
+  socket.send(JSON.stringify({ event: `${event}_success` }));
+}
+
 wss.on('connection', (socket) => {
   socket.on('message', (message) => {
     let data;
@@ -32,12 +38,14 @@ wss.on('connection', (socket) => {
       return;
     }
 
-    switch (data.event) {
-      case 'register':
-        console.log('register: ', data.id);
-        socket.uid = data.id;
-        socket.send(JSON.stringify({ event: 'register_success' }));
-        break;
+      switch (data.event) {
+        case 'register':
+          registerSocket(socket, data.id, 'register');
+          break;
+
+        case 'setup':
+          registerSocket(socket, data.id, 'setup');
+          break;
 
       case 'unlocked':
         console.log('unlock: ', data.id);
